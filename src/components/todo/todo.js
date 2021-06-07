@@ -5,7 +5,6 @@ import TodoForm from '../form.js';
 import TodoList from '../list.js';
 import './todo.scss';
 
-
 function ToDo() {
 
   const [list, setList] = useState([])
