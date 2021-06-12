@@ -1,17 +1,62 @@
-import { useState, useEffect } from 'react';
-import { Navbar, Container, Row, Col } from 'react-bootstrap';
+import { useState, useEffect, useContext } from 'react';
+import { Navbar, Container, Row, Col, Dropdown, DropdownButton } from 'react-bootstrap';
 import axios from 'axios';
-import Navigation from '../navbar.js';
-import TodoForm from '../form.js';
-import TodoList from '../list.js';
 import useAxios from 'axios-hooks'
+import Navigation from '../navbar/navbar.js';
+import TodoForm from '../form/form.js';
+import TodoList from '../list/list.js';
+import Pagination from '../pagination/pagination.js'
+import { SortContext } from '../../context/SortContext.js'
 import './todo.scss';
 
 function ToDo() {
   const [list, setList] = useState([])
+
+  // Initial Render
   const [{ data, loading, error }, refetch] = useAxios({
     url: 'https://api-js401.herokuapp.com/api/v1/todo', method: "GET"
   });
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [postsPerPage, setPostsPerPage] = useState(3)
+
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentList = list.slice(indexOfFirstPost, indexOfLastPost);
+
+  // Context
+  let { sort, setSort } = useContext(SortContext);
+
+  useEffect(() => {
+    switch (sort) {
+      case 'all':
+        setList(data.results)
+        break;
+      case 'completed':
+        let completedList = data.results.filter(value => value.complete)
+        setList(completedList)
+        break;
+      case 'incomplete':
+        let incompleteList = data.results.filter(value => value.complete === false)
+        setList(incompleteList)
+        break;
+      case 'ascending':
+        let ascending = data.results.sort(function (a, b) {
+          return b.difficulty - a.difficulty;
+        });
+        setList(ascending)
+        break;
+      case 'descending':
+        let descending = data.results.sort(function (a, b) {
+          return a.difficulty - b.difficulty;
+        })
+        setList(descending)
+        break;
+      default:
+      //
+    }
+  }, [sort, list])
 
   const addItem = (item) => {
     // Creates a few properties
@@ -65,12 +110,20 @@ function ToDo() {
       });
   }
 
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber)
+  }
 
   // componentDidMount
   useEffect(() => {
     if (data && data.results) {
-      console.log('THIS IS DATA: ', data.results)
-      setList(data.results)
+      // Initially only render 'Incomplete' Tasks
+      console.log(data.results)
+      let incompleteList = data.results.filter(value => value.complete === false)
+      let completedList = data.results.filter(value => value.complete)
+      let sortByCompletion = incompleteList.concat(completedList)
+      console.log(sortByCompletion)
+      setList(sortByCompletion)
     }
   }, [data]);
 
@@ -88,10 +141,26 @@ function ToDo() {
             <Row>
               <Col sm={4}><TodoForm addItem={addItem} /></Col>
               <Col xs={8}><TodoList
-                list={list}
+                list={currentList}
                 handleComplete={toggleComplete}
                 handleDelete={handleDelete}
-              /></Col>
+              />
+                <div className="control-items">
+                  <Pagination
+                    postsPerPage={postsPerPage}
+                    totalPosts={list.length}
+                    paginate={paginate}
+                    currentPage={currentPage}
+                  />
+                  <DropdownButton id="dropdown-basic-button" title="Sort">
+                    <Dropdown.Item onClick={() => setSort('all')} >All</Dropdown.Item>
+                    <Dropdown.Item onClick={() => setSort('completed')} >Completed</Dropdown.Item>
+                    <Dropdown.Item onClick={() => setSort('incomplete')}>Incomplete</Dropdown.Item>
+                    <Dropdown.Item onClick={() => setSort('ascending')}>Difficulty (ascending)</Dropdown.Item>
+                    <Dropdown.Item onClick={() => setSort('descending')}>Difficulty (descending)</Dropdown.Item>
+                  </DropdownButton>
+                </div>
+              </Col>
             </Row>
           </Container>
         </section>
