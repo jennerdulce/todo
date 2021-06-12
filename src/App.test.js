@@ -1,72 +1,185 @@
-import { rest } from 'msw'
-import { setupServer } from 'msw/node'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom/extend-expect';
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import App from './App';
 
-
-let mock = new MockAdapter(axios)
-
-const mockPostsData = [
+let mockPostsData = [
   { _id: 1, complete: false, text: 'Clean the Kitchen', difficulty: 3, assignee: 'Person A' },
   { _id: 2, complete: false, text: 'Do the Laundry', difficulty: 2, assignee: 'Person A' },
-  { _id: 3, complete: false, text: 'Walk the Dog', difficulty: 4, assignee: 'Person B' },
-  { _id: 4, complete: true, text: 'Do Homework', difficulty: 3, assignee: 'Person C' },
-  { _id: 5, complete: false, text: 'Take a Nap', difficulty: 1, assignee: 'Person B' }
 ];
 
 const mockNewTask = {
-  _id: 6,
+  _id: 3,
   complete: false,
   text: "dolorem dolore est ipsam",
   difficulty: 5,
   assignee: 'Test User'
 };
 
-describe("Todo Tests", () => {
+const server = setupServer(
 
-  mock.onGet("https://api-js401.herokuapp.com/api/v1/todo").reply(200, {
-    results: mockPostsData
+  // Get Request Works
+  rest.get(`*/todo`, (req, res, ctx) => {
+    let data = {
+      results: mockPostsData
+    }
+    return res(ctx.json(data));
+  }),
+
+  rest.post(`*/todo`, (req, res, ctx) => {
+    const item = req.body;
+    item._id = 3;
+    mockPostsData.push(item);
+    return res(ctx.json(item));
+  }),
+
+  rest.put(`*/todo/:id`, (req, res, ctx) => {
+    const item = req.body;
+    const id = parseFloat(req.params.id);
+    mockPostsData = mockPostsData.map(i => i._id === id ? item : i);
+    return res(ctx.json(item));
+  }),
+
+  rest.delete(`*/todo/:id`, (req, res, ctx) => {
+    const id = parseFloat(req.params.id);
+    mockPostsData = mockPostsData.filter(item => item._id !== id);
+    return res(null);
   })
+)
 
-  it('Should initially render 5 task items', async () => {
-    render(<App />)
-    await waitFor(() => {
-      const items = screen.getAllByLabelText('list-item');
-      expect(items.length).toBe(5)
-    })
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+
+// test('Renders the title of the page', () => {
+//   render(<App />)
+//   const title = screen.getByText('HOME');
+//   expect(title).toBeInTheDocument();
+// });
+
+test('Should initially render 2 task items', async () => {
+  render(<App />)
+  await waitFor(() => {
+    const items = screen.getAllByLabelText('list-item');
+    expect(items.length).toBe(2)
   })
-
-  it('Renders the title of the page', () => {
-    render(<App />)
-    const title = screen.getByText('HOME');
-    expect(title).toBeInTheDocument();
-  });
-
-  xit('Creates a new task and adds to the list', async () => {
-    render(<App />)
-    // 1. Find Elements
-    const form = screen.getByTestId('formTest')
-    const taskName = screen.getByTestId('addItemTest')
-    const difficulty = screen.getByTestId('difficultyTest')
-    const assignee = screen.getByTestId('assigneeTest')
-
-    // 2. Fire Fake Events
-    fireEvent.change(taskName, { target: { name: 'text', value: 'test' } })
-    fireEvent.change(difficulty, { target: { name: 'difficulty', value: '1' } })
-    fireEvent.change(assignee, { target: { name: 'assignee', value: 'Jenner' } })
-    fireEvent.submit(form)
-
-    // 3. Look for Elements that you updated / created
-    await waitFor(() => {
-      const listItems = screen.getAllByLabelText('list-item')
-      expect(listItems.length).toBe(6)
-    })
-  });
-
 })
+
+test('Creates a new task and adds to the list', async () => {
+  render(<App />)
+  // 1. Find Elements
+  const form = screen.getByTestId('formTest')
+  const taskName = screen.getByTestId('addItemTest')
+  const difficulty = screen.getByTestId('difficultyTest')
+  const assignee = screen.getByTestId('assigneeTest')
+
+  // 2. Fire Fake Events
+  fireEvent.change(taskName, { target: { name: 'text', value: 'test' } })
+  fireEvent.change(difficulty, { target: { name: 'difficulty', value: '1' } })
+  fireEvent.change(assignee, { target: { name: 'assignee', value: 'Jenner' } })
+  fireEvent.submit(form)
+
+  // 3. Look for Elements that you updated / created
+  await waitFor(() => {
+    const listItems = screen.getAllByLabelText('list-item')
+    expect(listItems.length).toBe(3)
+  })
+});
+
+// test('Deletes a task from the list', async () => {
+//   render(<App />)
+//   // 1. Find Elements
+//   const form = screen.getByTestId('formTest')
+//   const taskName = screen.getByTestId('addItemTest')
+//   const difficulty = screen.getByTestId('difficultyTest')
+//   const assignee = screen.getByTestId('assigneeTest')
+
+//   // 2. Fire Fake Events
+//   fireEvent.change(taskName, { target: { name: 'text', value: 'test' } })
+//   fireEvent.change(difficulty, { target: { name: 'difficulty', value: '1' } })
+//   fireEvent.change(assignee, { target: { name: 'assignee', value: 'Jenner' } })
+//   fireEvent.submit(form)
+
+//   // 3. Look for Elements that you updated / created
+//   await waitFor(() => {
+//     const listItems = screen.getAllByLabelText('list-item')
+//     expect(listItems.length).toBe(3)
+//   })
+// });
+
+
+
+
+// import { rest } from 'msw'
+// import { setupServer } from 'msw/node'
+// import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+// import '@testing-library/jest-dom/extend-expect';
+// import axios from 'axios';
+// import MockAdapter from 'axios-mock-adapter'
+// import App from './App';
+
+
+// let mock = new MockAdapter(axios)
+
+// const mockPostsData = [
+//   { _id: 1, complete: false, text: 'Clean the Kitchen', difficulty: 3, assignee: 'Person A' },
+//   { _id: 2, complete: false, text: 'Do the Laundry', difficulty: 2, assignee: 'Person A' },
+// ];
+
+// const mockNewTask = {
+//   _id: 3,
+//   complete: false,
+//   text: "dolorem dolore est ipsam",
+//   difficulty: 5,
+//   assignee: 'Test User'
+// };
+
+// describe("Todo Tests", () => {
+
+//   mock.onGet("https://api-js401.herokuapp.com/api/v1/todo").reply(200, {
+//     results: mockPostsData
+//   })
+
+//   mock.onPost("https://api-js401.herokuapp.com/api/v1/todo").reply(200, {
+
+//   })
+
+//   it('Should initially render 2 task items', async () => {
+//     render(<App />)
+//     await waitFor(() => {
+//       const items = screen.getAllByLabelText('list-item');
+//       expect(items.length).toBe(2)
+//     })
+//   })
+
+//   it('Renders the title of the page', () => {
+//     render(<App />)
+//     const title = screen.getByText('HOME');
+//     expect(title).toBeInTheDocument();
+//   });
+
+//   it('Creates a new task and adds to the list', async () => {
+//     render(<App />)
+//     // 1. Find Elements
+//     const form = screen.getByTestId('formTest')
+//     const taskName = screen.getByTestId('addItemTest')
+//     const difficulty = screen.getByTestId('difficultyTest')
+//     const assignee = screen.getByTestId('assigneeTest')
+
+//     // 2. Fire Fake Events
+//     fireEvent.change(taskName, { target: { name: 'text', value: 'test' } })
+//     fireEvent.change(difficulty, { target: { name: 'difficulty', value: '1' } })
+//     fireEvent.change(assignee, { target: { name: 'assignee', value: 'Jenner' } })
+//     fireEvent.submit(form)
+
+//     // 3. Look for Elements that you updated / created
+//     await waitFor(() => {
+//       const listItems = screen.getAllByLabelText('list-item')
+//       expect(listItems.length).toBe(3)
+//     })
+//   });
+
+// })
 
 // test('able to fetch data: GET', async () => {
 //   // Creates a fake API that you send a request to and you create your own JSON data to send back

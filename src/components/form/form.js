@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Button } from 'react-bootstrap';
-import useForm from './hooks/useForm.js'
+import useForm from '../../hooks/useForm.js'
 
 function TodoForm(props) {
   
@@ -37,7 +37,6 @@ function TodoForm(props) {
             placeholder="Assigned To" 
             onChange={handleChange} />
             <button>Add Item</button>
-            {/* <Button variant="primary">Add Item</Button> */}
           </Card.Body>
         </Card>
       </form>
