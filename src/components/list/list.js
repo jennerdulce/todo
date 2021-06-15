@@ -1,25 +1,7 @@
-import { Toast, Badge, Card, ListGroup } from 'react-bootstrap';
+import { Card, ListGroup } from 'react-bootstrap';
+import Auth from '../../auth/auth.js'
 
 function TodoList(props) {
-
-
-  // <Posts posts={currentPosts} loading={loading} />
-
-  // const Posts = ({ posts, loading, paginate }) => {
-  //   if (loading) {
-  //     return <h2>loading</h2>
-  //   }
-
-  //   return (
-  //     <ul>
-  //       {
-  //         posts.map(post => {
-  //           <li key={post.id} className="list-item">{post.title}</li>
-  //         })
-  //       }
-  //     </ul>
-  //   )
-  // }
 
 
   let completionStyles = {
@@ -28,30 +10,37 @@ function TodoList(props) {
     color: 'white',
     borderRadius: '15px'
   }
+
   return (
     <>
-      {
-        props.list.map(item => (
-          <Card aria-label="list-item" key={item._id} style={{ width: '40em', marginBottom: '1em' }}>
-            <Card.Header className="header-container">
-              <span
-                className="pending"
-                onClick={() => props.handleComplete(item._id)}
-                style={{ ...completionStyles, backgroundColor: item.complete ? 'green' : 'red' }}>
-                {item.complete ? "Completed" : "Incomplete"}
-              </span>
-              <span> {item.assignee}</span>
-              <span aria-label={item} className="deleteItem" value={item.id} onClick={() => props.handleDelete(item._id)}> x</span>
-            </Card.Header>
-            <ListGroup variant="flush">
-              <ListGroup.Item>
-                <div>{item.text}</div>
-                <div className="difficulty">Difficulty: {item.difficulty}</div>
-              </ListGroup.Item>
-            </ListGroup>
-          </Card>
-        ))
-      }
+      <Auth capability="read">
+        {
+          props.list.map(item => (
+            <Card aria-label="list-item" key={item._id} style={{ width: '40em', marginBottom: '1em' }}>
+              <Card.Header className="header-container">
+                <Auth capability="update">
+                  <span
+                    className="pending"
+                    onClick={() => props.handleComplete(item._id)}
+                    style={{ ...completionStyles, backgroundColor: item.complete ? 'green' : 'red' }}>
+                    {item.complete ? "Completed" : "Incomplete"}
+                  </span>
+                </Auth>
+                <span> {item.assignee}</span>
+                <Auth capability="delete">
+                  <span aria-label={item} className="deleteItem" value={item.id} onClick={() => props.handleDelete(item._id)}> x</span>
+                </Auth>
+              </Card.Header>
+              <ListGroup variant="flush">
+                <ListGroup.Item>
+                  <div>{item.text}</div>
+                  <div className="difficulty">Difficulty: {item.difficulty}</div>
+                </ListGroup.Item>
+              </ListGroup>
+            </Card>
+          ))
+        }
+      </Auth>
     </>
   );
 }
