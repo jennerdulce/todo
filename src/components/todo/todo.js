@@ -1,12 +1,17 @@
 import { useState, useEffect, useContext } from 'react';
-import { Navbar, Container, Row, Col, Dropdown, DropdownButton } from 'react-bootstrap';
+import { If, Then} from 'react-if';
+import { Navbar, Container, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
 import useAxios from 'axios-hooks'
 import Navigation from '../navbar/navbar.js';
 import TodoForm from '../form/form.js';
 import TodoList from '../list/list.js';
-import Pagination from '../pagination/pagination.js'
-import { SortContext } from '../../context/SortContext.js'
+import DropDown from '../dropdown/dropdown.js';
+import Pagination from '../pagination/pagination.js';
+import { SortContext } from '../../context/SiteContext.js';
+import { LoginContext } from '../../auth/context';
+
+
 import './todo.scss';
 
 function ToDo() {
@@ -26,7 +31,8 @@ function ToDo() {
   const currentList = list.slice(indexOfFirstPost, indexOfLastPost);
 
   // Context
-  let { sort, setSort } = useContext(SortContext);
+  let { sort } = useContext(SortContext);
+  const userContext = useContext(LoginContext)
 
   useEffect(() => {
     switch (sort) {
@@ -56,7 +62,7 @@ function ToDo() {
       default:
       //
     }
-  }, [sort, list])
+  }, [sort])
 
   const addItem = (item) => {
     // Creates a few properties
@@ -102,7 +108,6 @@ function ToDo() {
     let url = `https://api-js401.herokuapp.com/api/v1/todo/${id}`
     axios.delete(url)
       .then(function (response) {
-        console.log(response);
         refetch()
       })
       .catch(function (error) {
@@ -118,11 +123,9 @@ function ToDo() {
   useEffect(() => {
     if (data && data.results) {
       // Initially only render 'Incomplete' Tasks
-      console.log(data.results)
       let incompleteList = data.results.filter(value => value.complete === false)
       let completedList = data.results.filter(value => value.complete)
       let sortByCompletion = incompleteList.concat(completedList)
-      console.log(sortByCompletion)
       setList(sortByCompletion)
     }
   }, [data]);
@@ -132,39 +135,37 @@ function ToDo() {
       <header>
         <Navigation />
       </header>
-      <Container>
-        <Navbar bg="dark" expand="sm" variant="dark">
-          <Navbar.Brand href="#home">There are {list.filter(item => !item.complete).length} Items To Complete</Navbar.Brand>
-        </Navbar>
-        <section className="todo">
+      <If condition={userContext.isLoggedIn}>
+        <Then>
           <Container>
-            <Row>
-              <Col sm={4}><TodoForm addItem={addItem} /></Col>
-              <Col xs={8}><TodoList
-                list={currentList}
-                handleComplete={toggleComplete}
-                handleDelete={handleDelete}
-              />
-                <div className="control-items">
-                  <Pagination
-                    postsPerPage={postsPerPage}
-                    totalPosts={list.length}
-                    paginate={paginate}
-                    currentPage={currentPage}
+            <Navbar bg="dark" expand="sm" variant="dark">
+              <Navbar.Brand href="#home">There are {list.filter(item => !item.complete).length} Items To Complete</Navbar.Brand>
+            </Navbar>
+            <section className="todo">
+              <Container>
+                <Row>
+                  <Col sm={4}><TodoForm addItem={addItem} /></Col>
+                  <Col xs={8}><TodoList
+                    list={currentList}
+                    handleComplete={toggleComplete}
+                    handleDelete={handleDelete}
                   />
-                  <DropdownButton id="dropdown-basic-button" title="Sort">
-                    <Dropdown.Item onClick={() => setSort('all')} >All</Dropdown.Item>
-                    <Dropdown.Item onClick={() => setSort('completed')} >Completed</Dropdown.Item>
-                    <Dropdown.Item onClick={() => setSort('incomplete')}>Incomplete</Dropdown.Item>
-                    <Dropdown.Item onClick={() => setSort('ascending')}>Difficulty (ascending)</Dropdown.Item>
-                    <Dropdown.Item onClick={() => setSort('descending')}>Difficulty (descending)</Dropdown.Item>
-                  </DropdownButton>
-                </div>
-              </Col>
-            </Row>
+                    <div className="control-items">
+                      <Pagination
+                        postsPerPage={postsPerPage}
+                        totalPosts={list.length}
+                        paginate={paginate}
+                        currentPage={currentPage}
+                      />
+                      <DropDown />
+                    </div>
+                  </Col>
+                </Row>
+              </Container>
+            </section>
           </Container>
-        </section>
-      </Container>
+        </Then>
+      </If>
     </>
   )
 }
