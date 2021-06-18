@@ -57,7 +57,7 @@ afterAll(() => server.close())
 //   expect(title).toBeInTheDocument();
 // });
 
-test('Should initially render 2 task items', async () => {
+xtest('Should initially render 2 task items', async () => {
   render(<App />)
   await waitFor(() => {
     const items = screen.getAllByLabelText('list-item');
@@ -65,7 +65,7 @@ test('Should initially render 2 task items', async () => {
   })
 })
 
-test('Creates a new task and adds to the list', async () => {
+xtest('Creates a new task and adds to the list', async () => {
   render(<App />)
   // 1. Find Elements
   const form = screen.getByTestId('formTest')
