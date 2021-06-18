@@ -1,4 +1,5 @@
 import React, { useState, useContext } from "react";
+import { Button } from 'react-bootstrap';
 import { If, Then, Else } from 'react-if';
 import { LoginContext } from './context.js';
 
@@ -18,13 +19,13 @@ function Login() {
   return (
     <If condition={userContext.isLoggedIn}>
       <Then>
-        <button onClick={userContext.logout}>Log Out</button>
+        <Button type="button" variant="danger" onClick={userContext.logout}>Logout</Button>
       </Then>
       <Else>
         <form onSubmit={handleSubmit}>
           <input placeholder="username" name="username" onChange={handleChange} />
           <input name="password" type="password" onChange={handleChange} />
-          <button>Login</button>
+          <Button type="submit" variant="outline-light primary">Login</Button>
         </form>
       </Else>
     </If>

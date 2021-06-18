@@ -1,4 +1,4 @@
-import { Card } from 'react-bootstrap';
+import { Card, Button } from 'react-bootstrap';
 import useForm from '../../hooks/useForm.js'
 import Auth from '../../auth/auth.js'
 
@@ -38,7 +38,7 @@ function TodoForm(props) {
                 name="assignee"
                 placeholder="Assigned To"
                 onChange={handleChange} />
-              <button>Add Item</button>
+                <Button type="submit" variant="primary">Add Item</Button>
             </Card.Body>
           </Card>
         </form>
